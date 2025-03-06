@@ -7,6 +7,7 @@ import {Router} from "@angular/router";
 import {Order} from "../../model/order";
 import {FormsModule} from "@angular/forms";
 import {OrderService} from "../../services/order/order.service";
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-homepage',
@@ -29,16 +30,26 @@ export class HomePageComponent implements OnInit {
   quantityIsNull = false;
   orderSuccess = false;
   orderFailed = false;
+  isLoading = false; // Add loading state
 
   ngOnInit(): void {
     this.oidcSecurityService.isAuthenticated$.subscribe(
       ({isAuthenticated}) => {
         this.isAuthenticated = isAuthenticated;
+        this.isLoading = true; // Set loading state to true
         this.productService.getProducts()
-          .pipe()
-          .subscribe(product => {
-            this.products = product;
-          })
+          .pipe(
+            finalize(() => this.isLoading = false) // Set loading state to false when request completes
+          )
+          .subscribe(
+            product => {
+              this.products = product;
+            },
+            error => {
+              console.error('Error fetching products', error);
+              this.products = []; // Handle error by setting products to an empty array
+            }
+          );
       }
     )
   }
@@ -48,7 +59,6 @@ export class HomePageComponent implements OnInit {
   }
 
   orderProduct(product: Product, quantity: string) {
-
     this.oidcSecurityService.userData$.subscribe(result => {
       const userDetails = {
         email: result.userData.email,

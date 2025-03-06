@@ -22,7 +22,9 @@ export class HeaderComponent implements OnInit {
     )
     this.oidcSecurityService.userData$.subscribe(
       ({userData}) => {
+        console.log(userData)
         this.username = userData.preferred_username
+        // print all user data
       }
     )
   }
